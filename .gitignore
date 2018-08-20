@@ -1,0 +1,5 @@
+public/images/grupos/*
+public/images/integrantes/*
+public/hist/*
+application/config/config.php
+application/config/database.php
