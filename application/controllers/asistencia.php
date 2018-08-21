@@ -37,29 +37,36 @@ class Asistencia extends CI_Controller {
 		unset($data['warning']);
 		unset($data['error']);
 		
+		//Query pregunta si ya existe un Ingreso el dia de hoy
 		$asistencia = $this->object_model->get($this->controller,'',
 			array(
 				'DocumentoNo' => $_POST['DocumentoNo'],
-				'DATE(FechaHoraRegistro)' => date('Y-m-d', time()),
+				'DATE(RegistroEntrada)' => date('Y-m-d', time()),
 				'Ingreso' => $_POST['Ingreso']
 			));
 		// echo "<pre>";	print_r(count($asistencia));	echo "</pre>";
 
+		//Pregunta si no existe Ingreso
 		if((count($asistencia) == 0)) {
+
 			date_default_timezone_set('America/Bogota');
 			$date = date('Y-m-d H:i:s', time());
 			$timezone = date_default_timezone_get();
 			// echo "The current server timezone is: " . $timezone . " ans it's ". $date;
 			
+			//Query pregunta si existe persona con ese DocumentoNo
 			$persona = $this->object_model->get('persona','',array('DocumentoNo' => $_POST['DocumentoNo']));
+			
+			//Pregunta si existe persona con ese DocumentoNo
 			if ((count($persona) > 0 )) {
 				$persona = $persona[0];
 				// echo "<pre>";print_r($persona);echo "</pre>";
 	
+				//Query prepara Insert en la tabla
 				$asistencia = array(
 					'idGrupo' 			=> 0,
 					'idPersona' 		=> $persona['idPersona'],
-					'FechaHoraRegistro' => $date,
+					'RegistroEntrada' => $date,
 					'Nombre' 			=> $persona['Nombre'],
 					'Apellido' 			=> $persona['Apellido'],
 					'DocumentoNo' 		=> $persona['DocumentoNo'],
@@ -67,12 +74,15 @@ class Asistencia extends CI_Controller {
 				);
 				// echo "<pre>";print_r($asistencia);echo "</pre>";
 				
+				//INSERT
 				$EntryNo = $this->object_model->insertItem($this->controller,$asistencia);
 				// echo "<pre>";print_r($EntryNo);echo "</pre>";
 				
+				//Query pregunta si el Insert fuie correcto
 				$asistencia = $this->object_model->get($this->controller,'',array('EntryNo' => $EntryNo));
 				// echo "<pre>";print_r($asistencia);echo "</pre>";
 
+				//Pregunta si el Insert fuie correcto
 				if (count($asistencia) > 0) {
 					$asistencia = $asistencia[0];
 					$data['success'] = "<b>".$asistencia['Nombre']." ".$asistencia['Apellido']."</b>. ".
@@ -80,11 +90,16 @@ class Asistencia extends CI_Controller {
 				}
 					
 			} else {
+				//Prepara mensaje de error si la persona no se encuentra en la lista de empleados
 				$data['error'] = 
-				"El No. Documento <b>".$_POST['DocumentoNo']."</b> no se encuentra y su ingreso".
-				" no puso ser registrado."."Por favor revise con el Adminsitrador del sistema.";
+					"El No. Documento <b>".$_POST['DocumentoNo']."</b> no se encuentra ".
+					"en la lista de empleados y su ingreso no puso ser registrado.<br>".
+					"Por favor revise con el Administrador del sistema.";
 			}
 		} else {
+			//Prepara mensaje de error si ya se hizo ingreso con ese número de documento.
+			//Si quiere hacerse varios ingresos durante el día, debe quitarse este if y reemplazarlo
+			//por pregunta si existe un ingreso abierto.
 			$data['warning'] = 
 				"Su hora de ingreso ya hab&iacute;a sido registrada.";
 		}
@@ -102,80 +117,34 @@ class Asistencia extends CI_Controller {
 		unset($data['warning']);
 		unset($data['error']);
 		
+		//Query pregunta si hay un ingreso el día de hoy
 		$asistencia = $this->object_model->get($this->controller,'',
 			array(
 				'DocumentoNo' => $_POST['DocumentoNo'],
-				'DATE(FechaHoraRegistro)' => date('Y-m-d', time()),
+				'DATE(RegistroEntrada)' => date('Y-m-d', time()),
+				//'RegistroSalida' => date('0000-00-00 00:00:00'),
 				'Ingreso' => 1
 			));
-		// echo "<pre>";	print_r(count($asistencia));	echo "</pre>";
+		// echo "<pre>";	print_r($asistencia);	echo "</pre>";
 
+		//Pregunta si hay un ingreso HOY
 		if((count($asistencia) > 0)) {
-			$dateEntrance = $asistencia[0]['FechaHoraRegistro'];
-			$asistencia = $this->object_model->get($this->controller,'',
-				array(
-					'DocumentoNo' => $_POST['DocumentoNo'],
-					'FechaHoraRegistro >' => date('Y-m-d 00:00', strtotime($dateEntrance)),
-					'Ingreso' => 0
-				));
-			// echo "<pre>";	print_r(count($asistencia));	echo "</pre>";
-	
-			if((count($asistencia) == 0)) {
-				date_default_timezone_set('America/Bogota');
-				$date = date('Y-m-d H:i:s', time());
-				$timezone = date_default_timezone_get();
-				// echo "The current server timezone is: " . $timezone . " ans it's ". $date;
-				
-				$persona = $this->object_model->get('persona','',array('DocumentoNo' => $_POST['DocumentoNo']));
-				if ((count($persona) > 0 )) {
-					$persona = $persona[0];
-					// echo "<pre>";print_r($persona);echo "</pre>";
-		
-					$asistencia = array(
-						'idGrupo' 			=> 0,
-						'idPersona' 		=> $persona['idPersona'],
-						'FechaHoraRegistro' => $date,
-						'Nombre' 			=> $persona['Nombre'],
-						'Apellido' 			=> $persona['Apellido'],
-						'DocumentoNo' 		=> $persona['DocumentoNo'],
-						'Ingreso'			=> $_POST['Ingreso']
-					);
-					// echo "<pre>";print_r($asistencia);echo "</pre>";
-					
-					$EntryNo = $this->object_model->insertItem($this->controller,$asistencia);
-					// echo "<pre>";print_r($EntryNo);echo "</pre>";
-					
-					$asistencia = $this->object_model->get($this->controller,'',array('EntryNo' => $EntryNo));
-					// echo "<pre>";print_r($asistencia);echo "</pre>";
-	
-					if (count($asistencia) > 0) {
-						$asistencia = $asistencia[0];
-						$data['success'] = "<b>".$asistencia['Nombre']." ".$asistencia['Apellido']."</b>. ".
-							"Su hora de salida ha sido registrada exitosamente.";
-					}
-						
-				} else {
-					$data['error'] = 
-					"El No. Documento <b>".$_POST['DocumentoNo']."</b> no se encuentra.".
-					"Por favor verifique su No. Documento.";
-				}
-			} else {
-				//Aquí se busca el Entry No. y se actualiza con la última hora
-				$asistencia = $asistencia[0];
-	
-				date_default_timezone_set('America/Bogota');
-				$date = date('Y-m-d H:i:s', time());
-				$timezone = date_default_timezone_get();
-				// echo "The current server timezone is: " . $timezone . " ans it's ". $date;
-	
-				$this->object_model->updateItem(
-					$this->controller,
-					array('FechaHoraRegistro' => $date),
-					array('EntryNo' => $asistencia['EntryNo']));
-				
-				$data['success'] = "<b>".$asistencia['Nombre']." ".$asistencia['Apellido']."</b>. ".
-					"Su hora de salida ha sido registrada exitosamente.";
-			}
+			//Aquí se busca el Entry No. y se actualiza con la última hora
+			$asistencia = $asistencia[0];
+			
+			date_default_timezone_set('America/Bogota');
+			$date = date('Y-m-d H:i:s', time());
+			$timezone = date_default_timezone_get();
+			// echo "The current server timezone is: " . $timezone . " ans it's ". $date;
+			
+			$this->object_model->updateItem(
+				$this->controller,
+				array('RegistroSalida' => $date),
+				array('EntryNo' => $asistencia['EntryNo']));
+			
+			$data['success'] = "<b>".$asistencia['Nombre']." ".$asistencia['Apellido']."</b>. ".
+				"Su hora de salida ha sido registrada exitosamente.";
+
 		} else {
 			$data['success'] = "Su No. Documento ".$_POST['DocumentoNo']." no registra un ingreso el día de hoy.";
 		}

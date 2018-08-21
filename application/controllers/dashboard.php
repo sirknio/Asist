@@ -46,7 +46,7 @@ class Dashboard extends CI_Controller {
 		//INGRESOS REGISTRADOS
 		$asistencia = $this->object_model->get('asistencia','',
 			array(
-				'DATE(FechaHoraRegistro)' => date('Y-m-d', time()),
+				'DATE(RegistroEntrada)' => date('Y-m-d', time()),
 				'Ingreso' => 1
 			));
 		//$print = "<pre>".print_r($asistencia,true)."</pre>";
@@ -59,7 +59,7 @@ class Dashboard extends CI_Controller {
 		//$date = date('Y-m-d 13:52:29', time());
 		$asistencia = $this->object_model->get('asistencia','',
 			array(
-				'FechaHoraRegistro >' => $date,
+				'RegistroEntrada >' => $date,
 				'Ingreso' => 1
 			));
 		//$print = "<pre>".print_r($data['setupapp']['LVHoraEntrada'],true)."</pre>";
